@@ -5,7 +5,7 @@ A little tool that takes MM tags of Biomodal bams and convert to pat format.
 
 ## Description
 
-`calculate_methylated_c_positions.sh` is designed to process an input BAM file containing MM tags from Biomodal and convert them into PAT format. The script calculates the positions of methylated 'C's, converts them to CpG index values, handles invalid genomic regions, and outputs the results in a specified format.
+`patformm` is designed to process an input BAM file containing MM tags from Biomodal and convert them into PAT format. The script calculates the positions of methylated 'C's, converts them to CpG index values, handles invalid genomic regions, and outputs the results in a specified format.
 
 ## Usage
 
@@ -38,3 +38,5 @@ The script produces an output file with the following format (more info [here](h
 - Methylation string
 - Count of identical rows
 
+## TODOs:
+- `patformm calculate_cpos` isn't truly supporting multithread yet.
