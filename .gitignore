@@ -1,0 +1,10 @@
+*logs/
+*output/
+dev/
+.snakemake/
+*.gz*
+*.bam*
+*.sh.e*
+*.sh.o*
+*.fa*
+

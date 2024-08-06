@@ -1,0 +1,46 @@
+bam_files:
+  BM-BHE008:
+    input_path: "/g/data/pq08/projects/biomodal/data_bucket/wgs_cups_1/nf-results/duet-1.2.1_rd6078_2024-05-27_2131_5bp/sample_outputs/bams"
+    bam: "BM-BHE008.genome.GRCh38Decoy_primary_assembly.dedup.bam"
+  BM-PMC042:
+    input_path: "/g/data/pq08/projects/biomodal/data_bucket/wgs_cups_1/nf-results/duet-1.2.1_rd6078_2024-05-27_2131_5bp/sample_outputs/bams"
+    bam: "BM-PMC042.genome.GRCh38Decoy_primary_assembly.dedup.bam"
+  BM-FNH001:
+    input_path: "/g/data/pq08/projects/biomodal/data_bucket/wgs_cups_2/nf-results/duet-1.2.1_rd6078_2024-06-05_1344_5bp/sample_outputs/bams"
+    bam: "BM-FNH001.genome.GRCh38Decoy_primary_assembly.dedup.bam"
+  BM-LGH003:
+    input_path: "/g/data/pq08/projects/biomodal/data_bucket/wgs_cups_2/nf-results/duet-1.2.1_rd6078_2024-06-05_1344_5bp/sample_outputs/bams"
+    bam: "BM-LGH003.genome.GRCh38Decoy_primary_assembly.dedup.bam"
+  BM-PMC036:
+    input_path: "/g/data/pq08/projects/biomodal/data_bucket/wgs_cups_2/nf-results/duet-1.2.1_rd6078_2024-06-05_1344_5bp/sample_outputs/bams"
+    bam: "BM-PMC036.genome.GRCh38Decoy_primary_assembly.dedup.bam"
+  BM-PMC074:
+    input_path: "/g/data/pq08/projects/biomodal/data_bucket/wgs_cups_2/nf-results/duet-1.2.1_rd6078_2024-06-05_1344_5bp/sample_outputs/bams"
+    bam: "BM-PMC074.genome.GRCh38Decoy_primary_assembly.dedup.bam"
+  BM-RDH001:
+    input_path: "/g/data/pq08/projects/biomodal/data_bucket/wgs_cups_2/nf-results/duet-1.2.1_rd6078_2024-06-05_1344_5bp/sample_outputs/bams"
+    bam: "BM-RDH001.genome.GRCh38Decoy_primary_assembly.dedup.bam"
+  BM-GLH012:
+    input_path: "/g/data/pq08/projects/biomodal/data_bucket/wgs_cups_220524/nf-results/duet-1.2.1_rd6078_2024-05-24_1139_5bp/sample_outputs/bams"
+    bam: "BM-GLH012.genome.GRCh38Decoy_primary_assembly.dedup.bam"
+  BM-PMC020:
+    input_path: "/g/data/pq08/projects/biomodal/data_bucket/wgs_cups_220524/nf-results/duet-1.2.1_rd6078_2024-05-24_1139_5bp/sample_outputs/bams"
+    bam: "BM-PMC020.genome.GRCh38Decoy_primary_assembly.dedup.bam"
+  BM-1226:
+    input_path: "/g/data/pq08/projects/biomodal/data_bucket/wgs_cups_3/nf-results/duet-1.2.1_rd6078_2024-06-12_1413_5bp/sample_outputs/bams"
+    bam: "BM-1226.genome.GRCh38Decoy_primary_assembly.dedup.bam"
+  BM-BGH004:
+    input_path: "/g/data/pq08/projects/biomodal/data_bucket/wgs_cups_3/nf-results/duet-1.2.1_rd6078_2024-06-12_1413_5bp/sample_outputs/bams"
+    bam: "BM-BGH004.genome.GRCh38Decoy_primary_assembly.dedup.bam"
+  BM-FNH003:
+    input_path: "/g/data/pq08/projects/biomodal/data_bucket/wgs_cups_3/nf-results/duet-1.2.1_rd6078_2024-06-12_1413_5bp/sample_outputs/bams"
+    bam: "BM-FNH003.genome.GRCh38Decoy_primary_assembly.dedup.bam"
+  BM-PMC043:
+    input_path: "/g/data/pq08/projects/biomodal/data_bucket/wgs_cups_3/nf-results/duet-1.2.1_rd6078_2024-06-12_1413_5bp/sample_outputs/bams"
+    bam: "BM-PMC043.genome.GRCh38Decoy_primary_assembly.dedup.bam"
+  BM-GLH004:
+    input_path: "/g/data/pq08/projects/biomodal/data_bucket/wgs_cups_4/nf-results/duet-1.2.1_rd6078_2024-06-18_1459_5bp/sample_outputs/bams"
+    bam: "BM-GLH004.genome.GRCh38Decoy_primary_assembly.dedup.bam"
+  BM-LGH001:
+    input_path: "/g/data/pq08/projects/biomodal/data_bucket/wgs_cups_4/nf-results/duet-1.2.1_rd6078_2024-06-18_1459_5bp/sample_outputs/bams"
+    bam: "BM-LGH001.genome.GRCh38Decoy_primary_assembly.dedup.bam"

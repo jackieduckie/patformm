@@ -5,10 +5,11 @@ patformm() {
   # Check if the first argument is either "parse_mm_tags" or "calculate_cpos"
   if [ "$1" = "parse_mm_tags" ]; then
     shift # Remove the first argument
-    parse_mm_tags.sh "$@"
+    ./parse_mm_tags.sh "$@"
   elif [ "$1" = "calculate_cpos" ]; then
     shift # Remove the first argument
-    calculate_methylated_c_positions.sh "$@"
+    # ./calculate_methylated_c_positions.sh "$@"
+    ./calculate_cpos.sh "$@"
   else
     echo "Usage: patformm {parse_mm_tags|calculate_cpos} [--threads <threads>] [-o <output_file>] <input_file>"
     return 1
