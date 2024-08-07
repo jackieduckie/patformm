@@ -35,7 +35,7 @@ def calculate_positions(row, cpg_map):
     cpg_end = row['cpg_end']
     mm_tag = row['mm_tag']
     sequence = row['sequence']
-    print(f"calculating position: {chrom}:{start}-{end}")
+    # print(f"calculating position: {chrom}:{start}-{end}")
     t_values = [int(x) for x in mm_tag.rstrip(';').split(',')[1:] if x.isdigit()]
 
     if not t_values:

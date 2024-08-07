@@ -51,15 +51,15 @@ rule calculate_cpos:
         done="output/{sample}.done"
     params:
         patformm=patformm
-    threads: 3
+    threads: 8
     log: 
         stderr="/g/data/pq08/projects/biomodal/patformm/snakemake_logs/{sample}.stderr",
         stdout="/g/data/pq08/projects/biomodal/patformm/snakemake_logs/{sample}.stdout"
     # cluster: 
     #     queue="hugemem"
     resources:
-        mem_mb=280000,
-        walltime=36000,
+        mem_mb=100000,
+        walltime=144000,
         jobfs="5G"
     shell:
         """
