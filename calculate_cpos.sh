@@ -77,8 +77,7 @@ if [[ -z "$OUTPUT_FILE" ]]; then
     awk -F'\t' '$8 != "NA" {print $1"\t"$5"\t"$8}' $tmp_dir/tmp_final_output.bed | sort -k2,2n -k3,3 | uniq -c | awk '{print $2"\t"$3"\t"$4"\t"$1}'
 else
     awk -F'\t' '$8 != "NA" {print $1"\t"$5"\t"$8}' $tmp_dir/tmp_final_output.bed | sort -k2,2n -k3,3 | uniq -c | awk '{print $2"\t"$3"\t"$4"\t"$1}' > $OUTPUT_FILE && 
-	    gzip $OUTPUT_FILE
+	    bgzip $OUTPUT_FILE && tabix -C -b 2 -e 2 -m 12 $OUTPUT_FILE.gz
 fi
 
 # rm -r "$tmp_dir"
-# rm tmp_output.bed

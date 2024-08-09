@@ -1,5 +1,5 @@
 *logs/
-*output/
+*output*/
 dev/
 .snakemake/
 *.gz*

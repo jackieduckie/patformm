@@ -44,3 +44,54 @@ bam_files:
   BM-LGH001:
     input_path: "/g/data/pq08/projects/biomodal/data_bucket/wgs_cups_4/nf-results/duet-1.2.1_rd6078_2024-06-18_1459_5bp/sample_outputs/bams"
     bam: "BM-LGH001.genome.GRCh38Decoy_primary_assembly.dedup.bam"
+  BM-1198:
+    input_path: "/g/data/pq08/projects/biomodal/data_bucket/wgs_cups_1/nf-results/duet-1.2.1_rd6078_2024-05-27_2131_5bp/sample_outputs/bams"
+    bam: "BM-1198.genome.GRCh38Decoy_primary_assembly.dedup.bam"
+  BM-CUP1105:
+    input_path: /g/data/pq08/projects/biomodal/data_bucket/gcp_download/bams
+    bam:        BM-CUP1105.genome.GRCh38Decoy_primary_assembly.dedup.bam
+  BM-CUP1137:
+    input_path: /g/data/pq08/projects/biomodal/data_bucket/gcp_download/bams
+    bam:        BM-CUP1137.genome.GRCh38Decoy_primary_assembly.dedup.bam
+  BM-CUP1184:
+    input_path: /g/data/pq08/projects/biomodal/data_bucket/gcp_download/bams
+    bam:        BM-CUP1184.genome.GRCh38Decoy_primary_assembly.dedup.bam
+  BM-MBCB56:
+    input_path: /g/data/pq08/projects/biomodal/data_bucket/gcp_download/bams
+    bam:        BM-MBCB56.genome.GRCh38Decoy_primary_assembly.dedup.bam
+  BM-PM01065:
+    input_path: /g/data/pq08/projects/biomodal/data_bucket/gcp_download/bams
+    bam:        BM-PM01065.genome.GRCh38Decoy_primary_assembly.dedup.bam
+  BM-PM01067:
+    input_path: /g/data/pq08/projects/biomodal/data_bucket/gcp_download/bams
+    bam:        BM-PM01067.genome.GRCh38Decoy_primary_assembly.dedup.bam
+  BM-PM01533:
+    input_path: /g/data/pq08/projects/biomodal/data_bucket/gcp_download/bams
+    bam:        BM-PM01533.genome.GRCh38Decoy_primary_assembly.dedup.bam
+  BM-PMC008:
+    input_path: /g/data/pq08/projects/biomodal/data_bucket/gcp_download/bams
+    bam:        BM-PMC008.genome.GRCh38Decoy_primary_assembly.dedup.bam
+  BM-PMC009:
+    input_path: /g/data/pq08/projects/biomodal/data_bucket/gcp_download/bams
+    bam:        BM-PMC009.genome.GRCh38Decoy_primary_assembly.dedup.bam
+  BM-RDH007:
+    input_path: /g/data/pq08/projects/biomodal/data_bucket/gcp_download/bams
+    bam:        BM-RDH007.genome.GRCh38Decoy_primary_assembly.dedup.bam
+  COLO829BM:
+    input_path: /g/data/pq08/projects/biomodal/data_bucket/gcp_download/bams
+    bam:        COLO829BM.genome.GRCh38Decoy_primary_assembly.dedup.bam
+  CUP1201BM:
+    input_path: /g/data/pq08/projects/biomodal/data_bucket/gcp_download/bams
+    bam:        CUP1201BM.genome.GRCh38Decoy_primary_assembly.dedup.bam
+  CUP1212BM:
+    input_path: /g/data/pq08/projects/biomodal/data_bucket/gcp_download/bams
+    bam:        CUP1212BM.genome.GRCh38Decoy_primary_assembly.dedup.bam
+  HCC1395BM:
+    input_path: /g/data/pq08/projects/biomodal/data_bucket/gcp_download/bams
+    bam:        HCC1395BM.genome.GRCh38Decoy_primary_assembly.dedup.bam
+  BM-MBCB71:
+    input_path: /g/data/pq08/projects/biomodal/data_bucket/gcp_download/bams
+    bam:        BM-MBCB71.genome.GRCh38Decoy_primary_assembly.dedup.bam
+  BM-PM01926:
+    input_path: /g/data/pq08/projects/biomodal/data_bucket/gcp_download/bams
+    bam:        BM-PM01926.genome.GRCh38Decoy_primary_assembly.dedup.bam

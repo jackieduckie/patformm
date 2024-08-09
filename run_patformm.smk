@@ -47,10 +47,11 @@ rule calculate_cpos:
         bed=rules.parse_mm_tags.output.bed 
         # bed="{bam}.bed"
     output:
-        pat="output/{sample}.pat",
+        pat_gz="output/{sample}.pat.gz",
         done="output/{sample}.done"
     params:
-        patformm=patformm
+        patformm=patformm,
+        pat="output/{sample}.pat"
     threads: 8
     log: 
         stderr="/g/data/pq08/projects/biomodal/patformm/snakemake_logs/{sample}.stderr",
@@ -64,7 +65,7 @@ rule calculate_cpos:
     shell:
         """
         echo "running patformm calculate_cpos on {input.bed}" &&
-        {params.patformm} calculate_cpos --threads {threads} -o {output.pat} {input.bed} &&
+        {params.patformm} calculate_cpos --threads {threads} -o {params.pat} {input.bed} &&
         touch {output.done} &&
         echo "{wildcards.sample} done."
         """
