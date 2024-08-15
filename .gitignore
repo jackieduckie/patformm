@@ -1,6 +1,7 @@
 *logs/
 *output*/
 dev/
+data/
 .snakemake/
 *.gz*
 *.bam*

@@ -25,7 +25,7 @@ rule parse_mm_tags:
         lambda wildcards: "{input_path}/{bam}".format(input_path=config["bam_files"][wildcards.sample]["input_path"], bam=config["bam_files"][wildcards.sample]["bam"])
         # bam=lambda wildcards: os.path.join(wildcards.input_path, wildcards.bam)
     output:
-        bed="output/{sample}.bed"
+        bed=temp("output/{sample}.bed")
         # bed=lambda wildcards: os.path.join(patformm_path, f"{wildcards.bam}.bed")
     params:
         patformm=patformm
