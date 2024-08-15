@@ -6,13 +6,6 @@ patformm = os.path.join(patformm_path, "patformm")
 
 configfile: "config.yaml"
 
-# Read the bam_list file and parse the input paths and bam filenames
-# bam_list = []
-# with open(os.path.join(patformm_path, "bam_list")) as f:
-#     for line in f:
-#         input_path, bam = line.strip().split('\t')
-#         bam_list.append((input_path, bam))
-
 # Define the rule to run all processes
 rule all:
     input:
