@@ -5,27 +5,47 @@ import re
 
 # Load CpG bed file into a DataFrame
 def preload_cpg_bed(cpg_bed_file):
+    """
+    Load CpG bed file into memory and extend entries to include the second base of CpGs for reverse strand Cs.
+
+    Args:
+        cpg_bed_file: Path to the CpG BED file (gzipped).
+
+    Returns:
+        cpg_map: Dictionary mapping "chrom:pos" to CpG index.
+    """
     dtype = {
         'chrom': str,
         'pos': np.int32,
         'index': np.int32
     }
-    cpg_df = pd.read_csv(cpg_bed_file, sep='\t', header=None, names=['chrom', 'pos', 'index'], compression='gzip')
+    # Read the gzipped BED file into a DataFrame
+    cpg_df = pd.read_csv(
+        cpg_bed_file,
+        sep='\t',
+        header=None,
+        names=['chrom', 'pos', 'index'],
+        compression='gzip',
+        dtype=dtype
+    )
+
     print(f"cpg_df loaded")
-    cpg_df['pos_key'] = cpg_df['chrom'] + ':' + cpg_df['pos'].astype(str)
-    cpg_map = cpg_df.set_index('pos_key')['index'].to_dict()
+
+    # Duplicate rows to include both the original and the next position (C and G of CpG)
+    cpg_df_ext = pd.concat([
+        cpg_df,  # Original entries
+        cpg_df.assign(pos=cpg_df['pos'] + 1)  # Duplicated entries with pos + 1
+    ])
+
+    # Create 'pos_key' as "chrom:pos"
+    cpg_df_ext['pos_key'] = cpg_df_ext['chrom'] + ':' + cpg_df_ext['pos'].astype(str)
+
+    # Generate a dictionary mapping "chrom:pos" to CpG index
+    cpg_map = cpg_df_ext.set_index('pos_key')['index'].to_dict()
+
+    print(f"cpg_map created with {len(cpg_map)} entries")
     return cpg_map
 
-# Function to run grep and get the CpG index
-# Turns out this is much slower than reading in cpg_bed into memory
-# def get_cpg_index(chrom, pos, CpG_bed):
-#     try:
-#         result = subprocess.check_output(['grep', f"{chrom}\t{pos}\t", CpG_bed], text=True)
-        # result = subprocess.check_output(['grep', f"{chrom}\t{pos}\t", 'CpG.bed.hg38.gz'], text=True)
-#         cpg_index = result.split('\t')[3]
-#         return int(cpg_index)
-#     except subprocess.CalledProcessError:
-#         return np.nan
 
 # Function to calculate the positions of methylated Cs
 def calculate_positions(row, cpg_map):
