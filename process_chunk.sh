@@ -7,7 +7,7 @@
 patformm_path=/g/data/pq08/projects/biomodal/patformm
 
 # Process a bed_chunk file 
-awk '{print $1":"$2"-"$3}' $1 | samtools faidx $patformm_path/GRCh38Decoy.fa -r - | awk '/^>/ { if(NR>1) print "";  printf("%s\n",$0); next; } { printf("%s",$0);}  END {printf("\n");}' | grep -v ">" > $1.seq.tmp && 
-	paste $1 $1.seq.tmp > $1.seq &&
-	rm $1.seq.tmp $1 &&
-	python3 "${patformm_path}/process_chunk.py" $1.seq 1000000
+# awk '{print $1":"$2"-"$3}' $1 | samtools faidx $patformm_path/GRCh38Decoy.fa -r - | awk '/^>/ { if(NR>1) print "";  printf("%s\n",$0); next; } { printf("%s",$0);}  END {printf("\n");}' | grep -v ">" > $1.seq.tmp && 
+# paste $1 $1.seq.tmp > $1.seq &&
+# rm $1.seq.tmp $1 &&
+python3 "${patformm_path}/process_chunk.py" $1 1000000

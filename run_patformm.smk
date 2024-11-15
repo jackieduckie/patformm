@@ -4,7 +4,7 @@ import os
 patformm_path = "/g/data/pq08/projects/biomodal/patformm"
 patformm = os.path.join(patformm_path, "patformm")
 
-configfile: "config.yaml"
+configfile: "test_config.yaml"
 
 # Define the rule to run all processes
 rule all:
@@ -18,7 +18,7 @@ rule parse_mm_tags:
         lambda wildcards: "{input_path}/{bam}".format(input_path=config["bam_files"][wildcards.sample]["input_path"], bam=config["bam_files"][wildcards.sample]["bam"])
         # bam=lambda wildcards: os.path.join(wildcards.input_path, wildcards.bam)
     output:
-        bed=temp("output/{sample}.bed")
+        bed=temp("/scratch/pq08/rd6078/patformm_tmp/{sample}.bed")
         # bed=lambda wildcards: os.path.join(patformm_path, f"{wildcards.bam}.bed")
     params:
         patformm=patformm

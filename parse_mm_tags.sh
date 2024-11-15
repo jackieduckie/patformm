@@ -22,7 +22,8 @@ usage() {
 THREADS=1
 OUTPUT_FILE=""
 # tmp_mm_tags="tmp_mm_tags_1_10kbin"
-mm_dir="/g/data/pq08/projects/biomodal/patformm"
+mm_dir="/scratch/pq08/rd6078/patformm_tmp"
+# mm_dir="/g/data/pq08/projects/biomodal/patformm"
 
 # Parse the command-line arguments
 while [[ "$#" -gt 0 ]]; do
@@ -52,14 +53,21 @@ if [[ -z "$INPUT_BAM" ]]; then
 fi
 
 # mamba activate methyl_env
+# get the read chromosome, start position, CIGAR string, mm tag, and sequence
 parse_mm_tags() {
     local input_bam=$1
     local threads=$2 
-    # echo "Running: samtools view -@ $threads $input_bam"
+    echo "Processing $input_bam with $threads threads..." >&2
     samtools view -@ $threads $input_bam | awk '{
         OFS="\t";
-        mm_tag = ($15 ~ /^MM:Z:/ ? $15 : ($16 ~ /^MM:Z:/ ? $16 : "MM_tag_not_found"));
-        print $3, $4, $4 + length($10) - 1, mm_tag
+        mm_tag = "MM_tag_not_found";
+        for(i=1; i<=NF; i++) {
+            if($i ~ /^MM:Z:[C+C]/) {
+                mm_tag = $i;
+                break;
+            }
+        }
+        print $3, $4, $6, mm_tag, $10
     }'  
 }
 export -f parse_mm_tags
@@ -68,36 +76,50 @@ export -f parse_mm_tags
 
 tmp_mm_tags="$(basename $INPUT_BAM).tmp_mm_tags"
 echo "Running: parse_mm_tags $INPUT_BAM $THREADS > ${mm_dir}/${tmp_mm_tags}"
+# Note: this function outputs the same number of rows as the input bams, including reads with empty positions in MM tags.
 parse_mm_tags $INPUT_BAM $THREADS > ${mm_dir}/${tmp_mm_tags}
 
-# Count the number of rows in the input BED file
-num_rows=$(wc -l < "${mm_dir}/$tmp_mm_tags")
+if [[ -z "$OUTPUT_FILE" ]]; then
+    # echo "Output file is located at: ${mm_dir}/${tmp_mm_tags}"
+    cat ${mm_dir}/${tmp_mm_tags}
+else
+    mv "${mm_dir}/${tmp_mm_tags}" "$OUTPUT_FILE" 
+fi
 
-export TMPDIR=/scratch/pq08/rd6078/tmp
-tmp_dir=$(mktemp -d )
+
+# Note: below chunk uses wgbstools to annotate CpG ids and remove reads without overlaps with indexed CpGs. 
+# This is no longer needed as we are using the MM tags and CIGAR strings to annotate CpG ids. 
+# The annotation is done in the calculate_cpos rule in the Snakefile.
+
+# Count the number of rows in the input BED file
+# num_rows=$(wc -l < "${mm_dir}/$tmp_mm_tags")
+
+# export TMPDIR=/scratch/pq08/rd6078/tmp
+# tmp_dir=$(mktemp -d )
 
 # Check if the number of rows exceeds 2 million
-if [[ "$num_rows" -le 2000000 ]]; then
-    echo "The input BED file has $num_rows rows, which is less than or equal to 2 million rows. No need to split."
-    wgbstools convert -L "${mm_dir}/$tmp_mm_tags" --parsable --drop_empty --out_path "${tmp_dir}/${tmp_mm_tags}.concat.bed"
-else
-    # Split tmp_mm_tags in to 1M row small beds
-    echo "Spliting mm_tags bed file to temp dir $tmp_dir."
-    split -l 1000000 "$tmp_mm_tags" "$tmp_dir/tmp_mm_tags_chunk_"
-    # Process each chunk in parallel
-    echo "Annotate CpG id with wgbstools"
-    find "$tmp_dir" -name 'tmp_mm_tags_chunk_*' | xargs -n 1 -P "$THREADS" -I {} wgbstools convert -L "{}" --parsable --drop_empty --out_path "{}.out" &&
-    cat "$tmp_dir"/tmp_mm_tags_chunk_*.out > "${tmp_dir}/${tmp_mm_tags}.concat.bed"
-fi
+# Note: the --drop_empty arg removes reads without overlaps with indexed CpGs in the CpG.bed.hg38.gz file. The concoat.bed output file has fewer rows than the input bam.
+# if [[ "$num_rows" -le 2000000 ]]; then
+#     echo "The input BED file has $num_rows rows, which is less than or equal to 2 million rows. No need to split."
+#     wgbstools convert -L "${mm_dir}/$tmp_mm_tags" --parsable --drop_empty --out_path "${tmp_dir}/${tmp_mm_tags}.concat.bed"
+# else
+#     # Split tmp_mm_tags in to 1M row small beds
+#     echo "Spliting mm_tags bed file to temp dir $tmp_dir."
+#     split -l 1000000 "$tmp_mm_tags" "$tmp_dir/tmp_mm_tags_chunk_"
+#     # Process each chunk in parallel
+#     echo "Annotate CpG id with wgbstools"
+#     find "$tmp_dir" -name 'tmp_mm_tags_chunk_*' | xargs -n 1 -P "$THREADS" -I {} wgbstools convert -L "{}" --parsable --drop_empty --out_path "{}.out" &&
+#     cat "$tmp_dir"/tmp_mm_tags_chunk_*.out > "${tmp_dir}/${tmp_mm_tags}.concat.bed"
+# fi
 
 
-if [[ -z "$OUTPUT_FILE" ]]; then
-    echo "tmp files are located at: ${tmp_mm_tags} and ${tmp_dir}:" &&
-	    echo ${tmp_dir}/${tmp_mm_tags}.concat.bed
-else
-    cp ${tmp_dir}/${tmp_mm_tags}.concat.bed $OUTPUT_FILE &&
-	    rm ${tmp_mm_tags} &&
-	    rm -r ${tmp_dir} &&
-	    echo "tmp files ${tmp_mm_tags} and ${tmp_dir} deleted"
-fi
+# if [[ -z "$OUTPUT_FILE" ]]; then
+#     echo "tmp files are located at: ${tmp_mm_tags} and ${tmp_dir}:" &&
+# 	    echo ${tmp_dir}/${tmp_mm_tags}.concat.bed
+# else
+#     cp ${tmp_dir}/${tmp_mm_tags}.concat.bed $OUTPUT_FILE &&
+# 	    rm ${tmp_mm_tags} &&
+# 	    rm -r ${tmp_dir} &&
+# 	    echo "tmp files ${tmp_mm_tags} and ${tmp_dir} deleted"
+# fi
 

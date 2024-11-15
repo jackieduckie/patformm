@@ -15,19 +15,24 @@ patformm_path=/g/data/pq08/projects/biomodal/patformm
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 [--threads <threads>] [-o <output_file>] <input_bed_file>"
+    echo "Usage: $0 [--threads <threads>] [--chunk-size <chunk_size>] [-o <output_file>] <input_bed>"
     exit 1
 }
 
-# Default number of threads
+# Default values
 THREADS=1
 OUTPUT_FILE=""
+CHUNK_SIZE=""  # Empty by default
 
 # Parse the command-line arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --threads)
             THREADS=$2
+            shift
+            ;;
+        --chunk-size)
+            CHUNK_SIZE=$2
             shift
             ;;
         -o)
@@ -57,27 +62,53 @@ tmp_dir=$(mktemp -d)
 # tmp_dir=/scratch/pq08/rd6078/tmp/tmp.smPmXC0Ndp
 # echo "WARNING: resuming previously failed run for testing purposes: $tmp_dir"
 
-# Split the input BED file into smaller chunks
-# echo "WARNING: temporarily commenting below commands to resume failed run"
+# Split the input BED file based on chunk size or thread count
 echo "split BED to $tmp_dir"
-split -l $(( $(wc -l < "$INPUT_BED") / THREADS + 1 )) "$INPUT_BED" "$tmp_dir/bed_chunk_"
+if [[ -n "$CHUNK_SIZE" ]]; then
+    split -l "$CHUNK_SIZE" "$INPUT_BED" "$tmp_dir/bed_chunk_"
+else
+    split -l $(( $(wc -l < "$INPUT_BED") / THREADS + 1 )) "$INPUT_BED" "$tmp_dir/bed_chunk_"
+fi
 
 # Process each chunk in parallel and Combine the results
 echo "process temp bed chunks"
-find "$tmp_dir" -maxdepth 1 -name 'bed_chunk_*' | xargs -n 1 -P "$THREADS" -I {} $patformm_path/process_chunk.sh {} &&
-	cat "$tmp_dir"/*.out > $tmp_dir/tmp_final_output.bed
-
-
+find "$tmp_dir" -maxdepth 1 -name 'bed_chunk_*' | xargs -n 1 -P "$THREADS" -I {} $patformm_path/process_chunk.sh {} # &&
+	# cat "$tmp_dir"/*.out > $tmp_dir/tmp_final_output.bed
 # find "$tmp_dir" -name 'bed_chunk_*' | xargs -n 1 -P "$THREADS" bash -c 'process_chunk "$0"' _
 # find "$tmp_dir" -name 'bed_chunk_*' | xargs -n 1 -P "$THREADS" -I {} bash -c 'process_chunk "$@"' _ {}
+# Combine results and recalculate counts
+echo "Combining results..."
+cat "$tmp_dir"/*.out | \
+    sort -k1,1 -k2,2n -k3,3 | \
+    awk '
+        BEGIN {OFS="\t"}
+        {
+            key = $1 "\t" $2 "\t" $3
+            count[key] += $4
+        }
+        END {
+            for (key in count) {
+                print key, count[key]
+            }
+        }
+    ' > "$tmp_dir/final_combined.bed"
+# Sort the BED file and convert the second field to an integer
+sort -k2,2n -k3,3 $tmp_dir/final_combined.bed  > $tmp_dir/sorted_final_combined.bed
 
+# Compress the sorted BED file using bgzip
+# bgzip sorted_final_combined.bed
 
+# Index the compressed BED file using tabix
+# tabix -p bed sorted_final_combined.bed.gz
 
+# Output results
 if [[ -z "$OUTPUT_FILE" ]]; then
-    awk -F'\t' '$8 != "NA" {print $1"\t"$5"\t"$8}' $tmp_dir/tmp_final_output.bed | sort -k2,2n -k3,3 | uniq -c | awk '{print $2"\t"$3"\t"$4"\t"$1}'
+    cat "$tmp_dir/sorted_final_combined.bed"
 else
-    awk -F'\t' '$8 != "NA" {print $1"\t"$5"\t"$8}' $tmp_dir/tmp_final_output.bed | sort -k2,2n -k3,3 | uniq -c | awk '{print $2"\t"$3"\t"$4"\t"$1}' > $OUTPUT_FILE && 
-	    bgzip $OUTPUT_FILE && tabix -C -b 2 -e 2 -m 12 $OUTPUT_FILE.gz
+    mv "$tmp_dir/sorted_final_combined.bed" "$OUTPUT_FILE"
+    # Compress and index if needed
+    bgzip $OUTPUT_FILE && tabix -C -b 2 -e 2 -m 12 $OUTPUT_FILE.gz
+
 fi
 
 # rm -r "$tmp_dir"
