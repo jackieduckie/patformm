@@ -2,23 +2,25 @@ import pandas as pd
 import numpy as np
 import subprocess
 import re
+from collections import defaultdict
 
 # Load CpG bed file into a DataFrame
 def preload_cpg_bed(cpg_bed_file):
     """
-    Load CpG bed file into memory and extend entries to include the second base of CpGs for reverse strand Cs.
-
+    Load CpG bed file into memory with optimized data structure.
+    
     Args:
         cpg_bed_file: Path to the CpG BED file (gzipped).
-
+    
     Returns:
-        cpg_map: Dictionary mapping "chrom:pos" to CpG index.
+        cpg_map_by_chrom: Nested dictionary mapping chrom -> pos -> index
     """
     dtype = {
         'chrom': str,
         'pos': np.int32,
         'index': np.int32
     }
+    
     # Read the gzipped BED file into a DataFrame
     cpg_df = pd.read_csv(
         cpg_bed_file,
@@ -29,72 +31,71 @@ def preload_cpg_bed(cpg_bed_file):
         dtype=dtype
     )
 
-    print(f"cpg_df loaded")
+    # Create nested dictionary for faster lookups
+    cpg_map_by_chrom = defaultdict(dict)
+    for _, row in cpg_df.iterrows():
+        cpg_map_by_chrom[row['chrom']][row['pos']] = row['index']
 
-    # Duplicate rows to include both the original and the next position (C and G of CpG)
-    cpg_df_ext = pd.concat([
-        cpg_df,  # Original entries
-        cpg_df.assign(pos=cpg_df['pos'] + 1)  # Duplicated entries with pos + 1
-    ])
-
-    # Create 'pos_key' as "chrom:pos"
-    cpg_df_ext['pos_key'] = cpg_df_ext['chrom'] + ':' + cpg_df_ext['pos'].astype(str)
-
-    # Generate a dictionary mapping "chrom:pos" to CpG index
-    cpg_map = cpg_df_ext.set_index('pos_key')['index'].to_dict()
-
-    print(f"cpg_map created with {len(cpg_map)} entries")
-    return cpg_map
-
+    print(f"CpG map created with {len(cpg_df)} entries across {len(cpg_map_by_chrom)} chromosomes")
+    return cpg_map_by_chrom
 
 # Function to calculate the positions of methylated Cs
-def calculate_positions(row, cpg_map):
+def calculate_positions(row, cpg_map_by_chrom):
     """
     Calculate methylation status for CpGs in a read
     
     Args:
-        row: DataFrame row containing read info (chrom, start, cigar, mm_tag, sequence)
-        cpg_map: Dictionary mapping "chrom:pos" to CpG index
+        row: DataFrame row containing read info
+        cpg_map_by_chrom: Dictionary mapping "chrom:pos" to CpG index
     """
     chrom = row['chrom']
     start = row['start']
     cigar = row['cigar']
     mm_tag = row['mm_tag']
     sequence = row['sequence']
+    is_reverse = row['is_reverse']
 
-    # Parse MM tag to get methylated C positions (relative to read)
+    # Find C/G positions based on strand
+    if is_reverse:
+        # For reverse strand, look for Gs from right to left
+        c_positions = [i for i, base in enumerate(sequence[::-1]) if base == 'G']
+    else:
+        # For forward strand, look for Cs from left to right
+        c_positions = [i for i, base in enumerate(sequence) if base == 'C']
+
+    # Parse MM tag and get methylated positions
     methylated_read_positions = []
     if mm_tag.startswith('MM:Z:'):
-        # Find positions of all Cs in the sequence
-        c_positions = [i for i, base in enumerate(sequence) if base == 'C']
         values = mm_tag.replace('MM:Z:C+C,', '').rstrip(';').split(',')
-        c_index = 0  # Index to track which C we're at
-        
+        c_index = 0
         for v in values:
             if v.isdigit():
-                c_index += int(v)  # Skip this many Cs
+                c_index += int(v)
                 if c_index < len(c_positions):
-                    methylated_read_positions.append(c_positions[c_index])  # Get the actual position of this C
-                c_index += 1  # Move to next C
+                    if is_reverse:
+                        methylated_read_positions.append(len(sequence) - 1 - c_positions[c_index])
+                    else:
+                        methylated_read_positions.append(c_positions[c_index])
+                c_index += 1
 
-    # Parse CIGAR string to map read positions to reference positions
+    # Parse CIGAR string and map read positions to reference positions
     ref_pos = start
     read_pos = 0
-    read_to_ref_pos = {}  # Maps read positions to reference positions
+    read_to_ref_pos = {}
     
     cigar_ops = re.findall(r'(\d+)([MIDNSHP=X])', cigar)
+    
     for length, op in cigar_ops:
         length = int(length)
-        if op == 'M' or op == '=' or op == 'X':  # Match or mismatch
+        if op in ['M', '=', 'X']:
             for i in range(length):
                 read_to_ref_pos[read_pos + i] = ref_pos + i
             read_pos += length
             ref_pos += length
-        elif op == 'I' or op == 'S':  # Insertion or soft clipping
+        elif op in ['I', 'S']:
             read_pos += length
-        elif op == 'D' or op == 'N':  # Deletion or skip
+        elif op in ['D', 'N']:
             ref_pos += length
-        # Ignore H and P operations as they don't affect coordinates
 
     # Map methylated read positions to reference positions
     methylated_ref_positions = []
@@ -102,22 +103,39 @@ def calculate_positions(row, cpg_map):
         if read_pos in read_to_ref_pos:
             methylated_ref_positions.append(read_to_ref_pos[read_pos])
 
-    # Get CpG indices for methylated positions
-    cpg_indices = []
-    methylation_status = []
-    
-    # Find all possible CpGs in the read's genomic range
+    # Get methylation status for each reference position
+    methylation_by_pos = {}
     min_ref_pos = min(read_to_ref_pos.values())
     max_ref_pos = max(read_to_ref_pos.values())
     
-    # Check each reference position if it's in the CpG map
+    # Find all CpGs in the read's span
     for ref_pos in range(min_ref_pos, max_ref_pos + 1):
-        cpg_key = f"{chrom}:{ref_pos}"
-        if cpg_key in cpg_map:
-            cpg_idx = cpg_map[cpg_key]
-            cpg_indices.append(cpg_idx)
-            # If this CpG position was methylated, mark as 'C', otherwise 'T'
-            methylation_status.append('C' if ref_pos in methylated_ref_positions else 'T')
+        # For reverse reads, we need to look up the C position (one base before G)
+        cpg_lookup_pos = ref_pos - 1 if is_reverse else ref_pos
+        
+        if chrom in cpg_map_by_chrom and cpg_lookup_pos in cpg_map_by_chrom[chrom]:
+            read_pos = next((rp for rp, rp_ref in read_to_ref_pos.items() if rp_ref == ref_pos), None)
+            if read_pos is None:
+                methylation_by_pos[cpg_lookup_pos] = '.'  # Position in deletion or gap
+            else:
+                base = sequence[read_pos]
+                expected_base = 'G' if is_reverse else 'C'
+                
+                if base == expected_base:
+                    if ref_pos in methylated_ref_positions:
+                        methylation_by_pos[cpg_lookup_pos] = 'C'  # Methylated
+                    else:
+                        methylation_by_pos[cpg_lookup_pos] = 'T'  # Unmethylated
+                else:
+                    methylation_by_pos[cpg_lookup_pos] = '.'  # Variant or error
+
+    # Convert to final string (already in order by position)
+    cpg_indices = []
+    methylation_status = []
+    
+    for pos in sorted(methylation_by_pos.keys()):
+        cpg_indices.append(cpg_map_by_chrom[chrom][pos])
+        methylation_status.append(methylation_by_pos[pos])
 
     if not cpg_indices:
         return pd.Series([chrom, np.nan, '', 0])
@@ -127,25 +145,30 @@ def calculate_positions(row, cpg_map):
 
 # Process chunk of data
 def process_chunk(file, cpg_map, chunk_size):
+    """Process input file in chunks."""
     dtype = {
         'chrom': str,
         'start': np.int32,
         'cigar': str,
         'mm_tag': str,
-        'sequence': str
+        'sequence': str,
+        'is_reverse': np.int32
     }
     
     df = pd.read_csv(file, sep='\t', header=None, 
-                     names=['chrom', 'start', 'cigar', 'mm_tag', 'sequence'],
+                     names=['chrom', 'start', 'cigar', 'mm_tag', 'sequence', 'is_reverse'],
                      dtype=dtype, chunksize=chunk_size)
     
     all_results = []
     
     for i, chunk in enumerate(df):
+        # Convert is_reverse to boolean (16 = reverse strand)
+        chunk['is_reverse'] = chunk['is_reverse'] == 16
+        
         # Filter out rows where MM tag is missing or malformed
         chunk = chunk[chunk['mm_tag'].str.startswith('MM:Z:C+C', na=False)]
         
-        results = chunk.apply(calculate_positions, axis=1, cpg_map=cpg_map)
+        results = chunk.apply(calculate_positions, axis=1, cpg_map_by_chrom=cpg_map)
         results.columns = ['chrom', 'first_cpg_index', 'methylation_pattern', 'count']
         all_results.append(results)
         print(f"Processed chunk {i+1}")
@@ -171,5 +194,4 @@ if __name__ == "__main__":
     print(f"CpG bed preloaded")
     print(f"Processing chunk using chunksize={chunk_size}")
     process_chunk(input_file, cpg_map, chunk_size)
-    # process_chunk(input_file, cpg_bed_file)
 

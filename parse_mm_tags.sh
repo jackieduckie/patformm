@@ -53,7 +53,7 @@ if [[ -z "$INPUT_BAM" ]]; then
 fi
 
 # mamba activate methyl_env
-# get the read chromosome, start position, CIGAR string, mm tag, and sequence
+# get the read chromosome, start position, CIGAR string, mm tag, sequence, and strand
 parse_mm_tags() {
     local input_bam=$1
     local threads=$2 
@@ -67,7 +67,9 @@ parse_mm_tags() {
                 break;
             }
         }
-        print $3, $4, $6, mm_tag, $10
+        # Check if read is reverse strand (0x10 flag)
+        is_reverse = and($2, 0x10);
+        print $3, $4, $6, mm_tag, $10, is_reverse
     }'  
 }
 export -f parse_mm_tags

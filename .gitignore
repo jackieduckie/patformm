@@ -12,3 +12,5 @@ data/
 nohup.out
 *.beta
 debug.sh
+*.pdf
+process_chunk_slow.py

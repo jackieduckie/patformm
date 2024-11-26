@@ -4,7 +4,8 @@ import os
 patformm_path = "/g/data/pq08/projects/biomodal/patformm"
 patformm = os.path.join(patformm_path, "patformm")
 
-configfile: "test_config.yaml"
+configfile: "config.yaml"
+# configfile: "test_config.yaml"
 
 # Define the rule to run all processes
 rule all:
@@ -44,6 +45,7 @@ rule calculate_cpos:
         done="output/{sample}.done"
     params:
         patformm=patformm,
+        chunk_size=10000000,
         pat="output/{sample}.pat"
     threads: 8
     log: 
@@ -58,7 +60,7 @@ rule calculate_cpos:
     shell:
         """
         echo "running patformm calculate_cpos on {input.bed}" &&
-        {params.patformm} calculate_cpos --threads {threads} -o {params.pat} {input.bed} &&
+        {params.patformm} calculate_cpos --threads {threads} --chunk-size {params.chunk_size} -o {params.pat} {input.bed} &&
         touch {output.done} &&
         echo "{wildcards.sample} done."
         """
