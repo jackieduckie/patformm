@@ -8,7 +8,7 @@ data/
 *.sh.e*
 *.sh.o*
 *.fa*
-*config.yaml
+*.yaml
 nohup.out
 *.beta
 debug.sh
