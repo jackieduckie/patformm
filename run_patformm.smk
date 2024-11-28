@@ -9,12 +9,16 @@ configfile: "config_271124.yaml"
 # configfile: "config.yaml"
 # configfile: "test_config.yaml"
 
+# At top of file
+MAMBA_PATH = "/g/data/pq08/software/mambaforge"
+METHYL_ENV = f"{MAMBA_PATH}/envs/methyl_env"
+
 # Define the rule to run all processes
 rule all:
     input:
         expand("output/{sample}.done", sample=config["bam_files"].keys()),
-        expand("output_homog/{sample}/uxm.bed.gz", sample=config["bam_files"].keys()),
-        expand("output/{sample}.beta.gz", sample=config["bam_files"].keys())
+        expand("output_homog/{sample}.uxm.bed.gz", sample=config["bam_files"].keys()),
+        expand("output/{sample}.beta", sample=config["bam_files"].keys())
 
 # Rule to parse_mm_tags
 rule parse_mm_tags:
@@ -73,7 +77,7 @@ rule homogeneity_analysis:
     input:
         pat_gz=rules.calculate_cpos.output.pat_gz
     output:
-        uxm="output_homog/{sample}/uxm.bed.gz"
+        uxm="output_homog/{sample}.uxm.bed.gz"
     params:
         output_dir="output_homog",
         wgbstools=wgbstools,
@@ -88,6 +92,9 @@ rule homogeneity_analysis:
         stdout="/g/data/pq08/projects/biomodal/patformm/snakemake_logs/{sample}_homogeneity.stdout"
     shell:
         """
+        source {MAMBA_PATH}/etc/profile.d/conda.sh
+        conda activate {METHYL_ENV}
+        
         echo "Running homogeneity analysis for {wildcards.sample}" &&
         {params.wgbstools} homog \
         {input.pat_gz} \
@@ -114,6 +121,9 @@ rule pat2beta:
         stdout="/g/data/pq08/projects/biomodal/patformm/snakemake_logs/{sample}_pat2beta.stdout"
     shell:
         """
+        source {MAMBA_PATH}/etc/profile.d/conda.sh
+        conda activate {METHYL_ENV}
+        
         echo "Converting pat to beta values for {wildcards.sample}" &&
         {params.wgbstools} pat2beta \
         -o output/ \
